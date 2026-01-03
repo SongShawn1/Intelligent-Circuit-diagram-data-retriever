@@ -365,7 +365,7 @@ CUSTOM_CSS = """
 """
 
 # 创建 UI - 简洁风格
-with gr.Blocks(title="电路图资料检索") as demo:
+with gr.Blocks(title="电路图资料检索", analytics_enabled=False) as demo:
     gr.Markdown("# 电路图资料检索", elem_classes="main-title")
     gr.Markdown("输入关键词搜索，如：东风天龙整车电路图、博世EDC17、解放J6P", elem_classes="sub-title")
     
@@ -380,6 +380,7 @@ with gr.Blocks(title="电路图资料检索") as demo:
             height=400,
             show_label=False,
             elem_classes="chat-container",
+            type="messages",  # 使用 OpenAI 风格的 messages 格式
         )
         
         # 选项区域
@@ -408,34 +409,39 @@ with gr.Blocks(title="电路图资料检索") as demo:
             back_btn = gr.Button("返回上一级", visible=False)
             reset_btn = gr.Button("新对话")
     
-    # 事件绑定
+    # 事件绑定 - 全部禁用 API 暴露以避免 schema 生成问题
     send_btn.click(
         process_input,
         inputs=[txt_input, chat, ctx_state],
         outputs=[chat, ctx_state, options_radio, back_btn],
-    ).then(lambda: "", outputs=txt_input)
+        api_name=False,
+    ).then(lambda: "", outputs=txt_input, api_name=False)
     
     txt_input.submit(
         process_input,
         inputs=[txt_input, chat, ctx_state],
         outputs=[chat, ctx_state, options_radio, back_btn],
-    ).then(lambda: "", outputs=txt_input)
+        api_name=False,
+    ).then(lambda: "", outputs=txt_input, api_name=False)
     
     options_radio.change(
         handle_option_select,
         inputs=[options_radio, chat, ctx_state],
         outputs=[chat, ctx_state, options_radio, back_btn],
+        api_name=False,
     )
     
     back_btn.click(
         handle_back,
         inputs=[chat, ctx_state],
         outputs=[chat, ctx_state, options_radio, back_btn],
+        api_name=False,
     )
     
     reset_btn.click(
         handle_reset,
         outputs=[chat, ctx_state, options_radio, back_btn],
+        api_name=False,
     )
 
 
