@@ -12,170 +12,155 @@ license: mit
 
 # 🔌 智能车辆电路图资料导航 Chatbot
 
-基于向量检索的智能电路图资料导航系统，支持自然语言查询。
+基于导航树检索 + BGE Reranker + LLM Query Rewriter 的智能电路图资料检索系统。
 
-## 功能特点
+## 🌐 在线体验
 
-- 🤖 **智能对话**: 自然语言查询，支持模糊搜索和错别字纠正
-- 🔍 **语义检索**: 基于 ChromaDB + 智谱 Embeddings 的向量检索
-- 🎯 **Self-Querying**: LLM 解析查询为语义+结构化过滤
-- 📊 **Reranker**: BGE 精排模型提升结果相关性
-- 💡 **交互式兜底**: 低置信度时主动引导，帮助用户找到资料
-- 🌐 **Web 界面**: Streamlit 构建的现代化聊天界面
+**Hugging Face Spaces**: [https://huggingface.co/spaces/lengyanbb/Intelligent_circuit_diagram_data_retriever](https://huggingface.co/spaces/lengyanbb/Intelligent_circuit_diagram_data_retriever)
 
-## 技术架构
+## ✨ 功能特点
+
+- 🤖 **智能对话**: 自然语言查询，交互式导航
+- 🌲 **导航树检索**: 基于层级目录结构的高效检索（1944 节点，4229 文件）
+- 📊 **BGE Reranker**: 精排模型提升结果相关性
+- 🔄 **LLM Query Rewriter**: 智能查询改写，理解用户意图
+- 💡 **交互式引导**: 结果过多时提供筛选选项，帮助用户精确定位
+- 🌐 **Gradio 界面**: 现代化聊天界面，支持选项点选和返回导航
+
+## 🏗️ 技术架构
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Streamlit Web UI                        │
+│                     Gradio Web UI                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
+│  │ 聊天界面    │  │ 选项点选    │  │ 返回导航    │         │
+│  └─────────────┘  └─────────────┘  └─────────────┘         │
 ├─────────────────────────────────────────────────────────────┤
-│                  Industrial Chatbot 对话层                   │
+│                  Navigation Chatbot 对话层                   │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ Self-Query   │  │ Reranker     │  │ Decision     │      │
-│  │ Parser       │  │ (BGE)        │  │ Engine       │      │
+│  │ Query        │  │ BGE          │  │ Context      │      │
+│  │ Rewriter     │  │ Reranker     │  │ Manager      │      │
 │  └──────────────┘  └──────────────┘  └──────────────┘      │
 ├─────────────────────────────────────────────────────────────┤
-│                    查询预处理器                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │ 错别字纠正   │  │ 同义词扩展   │  │ 领域术语扩展 │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-├─────────────────────────────────────────────────────────────┤
-│                    向量检索引擎                              │
+│                    导航树检索引擎                            │
 │  ┌──────────────────────────────────────────────────┐      │
-│  │ ChromaDB (4229 文档) + 智谱 embedding-3          │      │
+│  │ NavigationTree (1944 节点) + 关键词匹配           │      │
+│  └──────────────────────────────────────────────────┘      │
+├─────────────────────────────────────────────────────────────┤
+│                    数据层                                    │
+│  ┌──────────────────────────────────────────────────┐      │
+│  │ structured_data_llm.json (4229 电路图资料)        │      │
 │  └──────────────────────────────────────────────────┘      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 快速开始
+## 🚀 快速开始
 
-### 1. 安装依赖
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/SongShawn1/Intelligent-Circuit-diagram-data-retriever.git
+cd Intelligent-Circuit-diagram-data-retriever
+```
+
+### 2. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 启动 Web 应用
+### 3. 配置环境变量
+
+```bash
+cp .env.example .env
+# 编辑 .env 文件，填入你的智谱 API Key
+```
+
+### 4. 启动应用
 
 ```bash
 python run.py
 ```
 
-或直接运行：
+或直接运行 Gradio 界面：
 
 ```bash
-streamlit run app/app_industrial.py --server.port 8503
+python app/gradio_ui.py
 ```
 
-访问 http://localhost:8503 即可使用。
+访问 http://localhost:7861 即可使用。
 
-### 3. 其他命令
-
-```bash
-# 运行检索测试
-python run.py --test
-
-# 重建向量数据库
-python run.py --build
-```
-
-## 项目结构
+## 📁 项目结构
 
 ```
 电路图检索/
-├── run.py                      # 🚀 启动脚本
+├── main.py                     # 🚀 HF Spaces 入口
+├── run.py                      # 🚀 本地启动脚本
 ├── requirements.txt            # 📦 依赖列表
 ├── README.md                   # 📖 项目说明
+├── .env.example                # ⚙️ 环境变量模板
+├── Dockerfile                  # 🐳 Docker 配置
 │
 ├── app/                        # 🖥️ 应用层
-│   ├── app_industrial.py       #    Streamlit Web 界面
-│   └── chatbot_industrial.py   #    工业级 Chatbot 核心
+│   ├── gradio_ui.py            #    Gradio Web 界面
+│   └── chatbot.py              #    导航 Chatbot 核心
 │
 ├── core/                       # ⚙️ 核心模块
-│   ├── build_vector_db.py      #    向量数据库构建
-│   ├── embedding_service.py    #    Embedding 服务
-│   ├── self_query_parser.py    #    Self-Querying 解析器
-│   ├── decision_engine.py      #    决策引擎 (Agentic RAG)
-│   ├── reranker.py             #    重排序模型
-│   ├── hybrid_search.py        #    🆕 混合检索 (Vector + BM25)
-│   ├── query_expansion.py      #    🆕 查询扩展 (LLM驱动)
-│   └── typo_corrector.py       #    错别字纠正
+│   ├── navigation_tree.py      #    导航树构建与检索
+│   ├── query_rewriter.py       #    LLM 查询改写器
+│   ├── reranker.py             #    BGE 重排序模型
+│   ├── cache.py                #    结果缓存
+│   └── logger.py               #    日志工具
 │
 ├── data/                       # 📊 数据层
-│   ├── 资料清单.csv            #    原始数据
-│   ├── structured_data_llm.json#    LLM 结构化数据
-│   ├── keywords.txt            #    测试关键词
-│   └── chroma_db/              #    向量数据库
+│   ├── structured_data_llm.json#    结构化电路图数据
+│   └── 资料清单.csv            #    原始数据
 │
-├── tools/                      # 🔧 工具脚本
-│   ├── preprocess_with_llm.py  #    LLM ETL 数据清洗
-│   └── test_search.py          #    检索效果测试
-│
-└── config/                     # ⚙️ 配置文件
-    └── 开发项目描述.pdf        #    项目需求文档
+├── cache/                      # 💾 缓存目录
+└── logs/                       # 📝 日志目录
 ```
 
-## 技术特性
+## 🔧 核心技术
 
-### 🔄 Query Expansion 查询扩展
-当检索结果不足时（如 LLM 解析错误导致零结果），自动触发查询扩展：
-- **问题识别**：分析为何结果不足
-- **查询改写**：LLM 生成更通用的查询
-- **备选查询**：提供多个查询变体
-- **典型场景**：用户说"东风天龙"但 LLM 错误解析为"东风柳汽"
+### 🌲 导航树检索
+基于电路图资料的层级目录结构构建导航树：
+- **高效遍历**: 支持按品牌、车系、模块快速定位
+- **关键词匹配**: 多关键词模糊匹配
+- **路径导航**: 支持返回上级、重新选择
 
-### 🔍 Hybrid Search 混合检索
-结合两种检索方式的优势：
-- **向量检索**：语义理解，适合模糊查询
-- **BM25 检索**：精确关键词匹配，适合品牌、型号查询
-- **RRF 融合**：Reciprocal Rank Fusion 算法融合两种结果
+### 🔄 LLM Query Rewriter
+使用智谱 GLM-4-flash 智能改写用户查询：
+- **意图理解**: 识别用户真实需求
+- **关键词提取**: 提取品牌、车型、系统等关键信息
+- **查询优化**: 生成更精准的检索关键词
 
-### 🎯 Self-Querying Retrieval  
-使用 LLM 自动解析用户查询为：
-- 语义查询（用于向量搜索）
-- 结构化过滤条件（品牌、车系、文档类型等）
+### 📊 BGE Reranker
+使用 BGE-Reranker 模型对检索结果精排：
+- **语义相关性**: 深度理解查询与文档的相关性
+- **结果优化**: 将最相关的结果排在前面
 
-### 🔄 渐进式过滤放宽
-当过滤条件太严格时，自动逐步放宽条件以获得更多结果
+### 💡 交互式引导
+当结果过多时，系统会：
+- 分析结果中的关键词分布
+- 提供筛选选项供用户点选
+- 支持多轮交互逐步缩小范围
 
-## 查询示例
+## 💬 查询示例
 
 | 查询 | 说明 |
 |------|------|
-| 解放J6空调电路图 | 品牌 + 车型 + 系统 |
-| 东风天龙保险丝盒 | 品牌 + 车型 + 部件 |
-| 五十铃发动机电路图 | 品牌 + 系统 |
-| 山西大运电器盒 | 子品牌精确匹配 |
-| 潍柴WP10针脚图 | 发动机型号 + 文档类型 |
-| VGT线路图 | 领域术语查询 |
+| 东风天龙整车电路图 | 品牌 + 车型 + 类型 |
+| 博世EDC17 | 发动机ECU型号 |
+| 解放J6P仪表 | 品牌 + 车型 + 模块 |
+| 潍柴发动机线路图 | 发动机品牌 + 类型 |
+| 后处理系统 | 系统模块查询 |
 
-## 优化效果
+## ⚙️ 环境变量
 
-基于 22 条真实用户查询测试：
+| 变量名 | 说明 | 必填 |
+|--------|------|------|
+| `ZHIPU_API_KEY` | 智谱 AI API Key（用于 LLM Query Rewriter） | 是 |
 
-| 指标 | 原始查询 | 预处理后 | 提升 |
-|------|---------|---------|------|
-| 良好匹配(>0.4) | 18.2% | 40.9% | +22.7% |
-| 精确匹配(>0.5) | 9.1% | 13.6% | +4.5% |
-
-主要优化手段：
-- 错别字纠正（庆龄→庆铃, 豪汉→豪瀚）
-- 同义词扩展（保险丝→保险盒/熔断器）
-- 品牌别名（庆铃→五十铃）
-- 领域术语（VGT→涡轮增压）
-- 精确查询保护（避免过度扩展）
-
-## 配置
-
-创建 `.env` 文件配置 OpenAI API（可选）：
-
-```
-OPENAI_API_KEY=your-api-key
-OPENAI_API_BASE=https://api.openai.com/v1
-```
-
-如果不配置 OpenAI，系统会自动使用本地 BGE 模型。
-
-## 许可证
+## 📄 许可证
 
 MIT License
